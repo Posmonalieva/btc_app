@@ -1,5 +1,7 @@
+import 'dart:developer';
 import 'dart:io' show Platform;
 import 'package:btc_app/constant_datas.dart';
+import 'package:btc_app/coin_api_srvs.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -12,26 +14,27 @@ class CoinPage extends StatefulWidget {
 
 class _CoinPageState extends State<CoinPage> {
   final double _btcValue = 1;
-  final double _fiatMoneyValue = 0;
+  double _fiatMoneyValue = 0;
 
   String dropdownValue = currencyList.first;
 
   int _selectedItemIndex = (currencyList.length / 2).round();
 
-  // void fiilItems() {}
+  @override
+  void didChangeDependencies() async {
+    await getCurrencyRate(currencyList[_selectedItemIndex]);
+    super.didChangeDependencies();
+  }
 
-  // void tizmeniAylanypOzgort() {
-  // for (var value in fiatMoneyList) {
-  //   log('fiatMoneyList value = $value');
-  // }
-  // currencyList.forEach((value) {
-  //   log('forEach fiatMoneyList value = $value');
-  // });
+  Future<void> getCurrencyRate(String currency) async {
+    final response = await CoinApiSrvs().getCurrencyRate(currency);
+    log('response: $response');
 
-  //   for (final currency in currencyList) {
-  //     log('for loop fiatMoneyList currency = $currency');
-  //   }
-  // }
+    _fiatMoneyValue = (response['rate'] as double).roundToDouble();
+    log('_fiatMoneyValue: $_fiatMoneyValue');
+
+    setState(() {});
+  }
 
   Widget buildItemsForiOS() {
     return CupertinoPicker(
@@ -44,7 +47,9 @@ class _CoinPageState extends State<CoinPage> {
         initialItem: _selectedItemIndex,
       ),
       // This is called when selected item is changed.
-      onSelectedItemChanged: (int selectedItem) {
+      onSelectedItemChanged: (int selectedItem) async {
+        await getCurrencyRate(currencyList[_selectedItemIndex]);
+
         setState(() {
           _selectedItemIndex = selectedItem;
         });
