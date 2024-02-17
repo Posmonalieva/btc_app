@@ -1,20 +1,29 @@
 import 'dart:developer';
 import 'dart:io' show Platform;
-import 'package:btc_app/constant_datas.dart';
-import 'package:btc_app/coin_api_srvs.dart';
+
+import 'package:btc_app/utils/constant_datas.dart';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../../../data/repositories/coin/models/coin.model.dart';
+import '../../../data/repositories/coin/repositories/coin_repository.dart';
+import '../../../data/services/coin_api_srvs.dart';
+
 class CoinPage extends StatefulWidget {
-  const CoinPage({super.key});
+  const CoinPage({Key? key}) : super(key: key);
 
   @override
-  State<CoinPage> createState() => _CoinPageState();
+  // ignore: library_private_types_in_public_api
+  _CoinPageState createState() => _CoinPageState();
 }
 
 class _CoinPageState extends State<CoinPage> {
-  final double _btcValue = 1;
+  //int _btcValue = 1;
   double _fiatMoneyValue = 0;
+  final int _btcValue = 1;
+
+  CoinModel? _coinModel;
 
   String dropdownValue = currencyList.first;
 
@@ -32,6 +41,7 @@ class _CoinPageState extends State<CoinPage> {
 
     _fiatMoneyValue = (response['rate'] as double).roundToDouble();
     log('_fiatMoneyValue: $_fiatMoneyValue');
+    _coinModel = await CoinRepository().getCurrencyRate(currency);
 
     setState(() {});
   }
@@ -48,7 +58,7 @@ class _CoinPageState extends State<CoinPage> {
       ),
       // This is called when selected item is changed.
       onSelectedItemChanged: (int selectedItem) async {
-        await getCurrencyRate(currencyList[_selectedItemIndex]);
+        await getCurrencyRate(currencyList[selectedItem]);
 
         setState(() {
           _selectedItemIndex = selectedItem;
@@ -63,52 +73,23 @@ class _CoinPageState extends State<CoinPage> {
             ),
           )
           .toList(),
-
-      /// 3-variant List тин озундо generate деген function бар экен !!!
-      //   List<Widget>.generate(currencyList.length, (int index) {
-      //     return Center(
-      //       child: Text(
-      //         currencyList[index],
-      //       ),
-      //     );
-      //   }),
     );
   }
 
-  /// 2-chi jolu  !!!!
-  // List<DropdownMenuItem<String>> tizmeniAylanipOzgort() {
-  //   return currencyList.map<DropdownMenuItem<String>>(
-  //     (String value) {
-  //       return DropdownMenuItem<String>(
-  //         value: value,
-  //         child: Text(
-  //           value,
-  //           style: const TextStyle(color: Colors.black),
-  //         ),
-  //       );
-  //     },
-  //   ).toList();
-  // }
-
   Widget buildItemsForAndroid() {
-    ///1- variant
     List<DropdownMenuItem<String>> items = [];
+
     for (var currency in currencyList) {
-      final dropdownMenuItem = DropdownMenuItem<String>(
-        value: currency,
-        child: Text(
-          currency,
-          style: const TextStyle(color: Colors.black),
+      items.add(
+        DropdownMenuItem<String>(
+          value: currency,
+          child: Text(
+            currency,
+            style: const TextStyle(color: Colors.black),
+          ),
         ),
       );
-
-      // log('dropdownMenuItem = ${dropdownMenuItem.value}');
-
-      items.add(dropdownMenuItem);
     }
-
-    // log('items = $items');
-    /// 1-variantyn ayagi
 
     return DropdownButton<String>(
       value: dropdownValue,
@@ -165,16 +146,7 @@ class _CoinPageState extends State<CoinPage> {
                   padding: const EdgeInsets.symmetric(
                     vertical: 12.0,
                   ),
-                  child: Text(
-                    '$_btcValue BTC = $_fiatMoneyValue ${getSelectCurrency()}'
-                        .toUpperCase(),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: _buildText(),
                 ),
               ),
             ),
@@ -191,5 +163,27 @@ class _CoinPageState extends State<CoinPage> {
         ],
       ),
     );
+  }
+
+  Widget _buildText() {
+    if (_coinModel == null) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(4.0),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    } else {
+      return Text(
+        '$_btcValue BTC = ${_coinModel!.rate.toStringAsFixed(2)} ${getSelectCurrency()}'
+            .toUpperCase(),
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          fontSize: 20,
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      );
+    }
   }
 }

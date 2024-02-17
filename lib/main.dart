@@ -1,6 +1,6 @@
-import 'package:btc_app/coin.page.dart';
-
 import 'package:flutter/material.dart';
+
+import 'presentation/coin/pages/coin_page.dart';
 
 void main() {
   runApp(const MyApp());

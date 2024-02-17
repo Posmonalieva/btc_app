@@ -21,3 +21,8 @@ const List<String> currencyList = [
   'USD', //19
   'ZAR', //20
 ];
+
+class ApiKeys {
+  static const String url = "https://rest.coinapi.io/v1/exchangerate";
+  static const String apiKey = 'ACB85053-F12A-4C95-A402-A47F49709F1B';
+}
